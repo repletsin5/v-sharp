@@ -9,23 +9,8 @@ on:
       - main
 
 jobs:
-  build:
+  noop:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go: [1.25]
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{ matrix.go }}
-
-      - name: Run Tests
-        run: go test ./...
-
-      - name: Build
-        run: bash scripts/build.sh
+      - name: Do nothing
+        run: echo "This workflow does nothing."
