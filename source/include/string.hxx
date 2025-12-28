@@ -2,6 +2,48 @@
 
 #include <string_view>
 
+
+[[nodiscard]]
+inline constexpr std::string_view toString_Access(AccessType access) {
+    switch (access)
+    {
+    case AccessType::Default:
+		return "Default";
+        break;
+    case AccessType::Public:
+		return "Public";
+        break;
+    case AccessType::Private:
+		return "Private";
+        break;
+    default:
+        return "Unknown";
+        break;
+    }
+}
+
+[[nodiscard]]
+inline constexpr std::string_view toString_Modifier(ModifierType mod) {
+    switch (mod)
+    {
+    case ModifierType::None:
+		return "None";
+        break;
+    case ModifierType::Static:
+		return "Static";
+        break;
+    case ModifierType::Virtual:
+		return "Virtual";
+        break;
+    case ModifierType::Override:
+		return "Override";
+        break;
+    default:
+        return "Unknown";
+        break;
+    }
+}
+
 [[nodiscard]]
 inline constexpr std::string_view typeToString(Type t) noexcept
 {
@@ -57,4 +99,12 @@ inline std::ostream &operator<<(std::ostream &os, Type t)
 inline std::ostream &operator<<(std::ostream &os, const Keyword &kw)
 {
     return os << kw.name;
+}
+inline std::ostream& operator<<(std::ostream& os, const AccessType& ac)
+{
+    return os << toString_Access(ac);
+}
+inline std::ostream& operator<<(std::ostream& os, const ModifierType& mod)
+{
+    return os << toString_Modifier(mod);
 }

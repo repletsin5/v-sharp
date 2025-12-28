@@ -23,10 +23,15 @@ struct Parser
     ASTNodePtr parserProgram();
     ASTNodePtr parseExpression(int minPrec = 1);
     ASTNodePtr parsePrimary();
-    ASTNodePtr parseFunction();
+    ASTNodePtr parseFunction(ASTNode* parent = nullptr);
     Type parseType();
-    ASTNodePtr parseVarDecl();
+    ASTNodePtr parseVarDecl(ASTNode* parent = nullptr);
     ASTNodePtr parseIfExpr();
+    ASTNodePtr parseClassDecl();
+    AccessType parseAccessModifier();
+    ModifierType parseModifiers();
+    ASTNodePtr parseBody(TokenType endCase =  TokenType::LeftBrace, ASTNode* pc = nullptr,bool shouldAdvance = true);
+
 
 private:
     int getPrecedence() const { return lexer.precedence(current.Type); }

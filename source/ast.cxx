@@ -135,6 +135,14 @@ void printAST(const ASTNode *node, int indent)
         printAST(as->value.get(), indent + 2);
         break;
     }
+    case ASTNodeType::ClassDecl:
+    {
+		const ClassDeclNode* cls = static_cast<const ClassDeclNode*>(node);
+        std::cout << pad << "ClassDecl(" << cls->name << ") Access: " << cls->access << std::endl;
+        std::cout << pad << "  Body:" << std::endl;
+        printAST(cls->body.get(), indent + 4);
+		break;
+    }
     default:
         std::cout << pad << "Unknown AST Node" << std::endl;
     }

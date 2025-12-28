@@ -6,6 +6,22 @@
 #include <string>
 #include <cstdint>
 
+enum class ModifierType
+{
+	None,
+	Static,
+	Virtual,
+	Override
+};
+
+
+enum class AccessType
+{
+	Default, // So that we can distinguish between no modifier but has an internal access and explicit access modifier
+    Public,
+    Private
+};
+
 enum class Type
 {
     Void,
@@ -42,17 +58,23 @@ enum class ASTNodeType
     Identifier,
     FunctionCall,
     AssignExpr,
+    ClassDecl,
 };
+struct ASTNode;
+
+using ASTNodePtr = std::unique_ptr<ASTNode>;
+using ASTNodeList = std::vector<ASTNodePtr>;
 
 struct ASTNode
 {
     ASTNodeType type;
-    ASTNode(ASTNodeType t) : type(t) {}
+    ASTNode* parent;
+
+    ASTNode(ASTNodeType t) : type(t), parent(nullptr) {}
+
     virtual ~ASTNode() = default;
 };
 
-using ASTNodePtr = std::unique_ptr<ASTNode>;
-using ASTNodeList = std::vector<ASTNodePtr>;
 
 using LiteralValue = std::variant<int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t, float, double, bool, char, std::string>;
 
@@ -94,14 +116,15 @@ struct BinaryExprNode : ASTNode
 
 struct FunctionDeclNode : ASTNode
 {
-    std::string access;
     std::string name;
     std::vector<std::pair<Type, std::string>> params;
     Type returnType;
     ASTNodePtr body;
+    AccessType access;
+    ModifierType modifier;
 
-    FunctionDeclNode(std::string access, std::string name, std::vector<std::pair<Type, std::string>> params, Type returnType, ASTNodePtr body)
-        : ASTNode(ASTNodeType::FunctionDecl), access(std::move(access)), name(std::move(name)), params(std::move(params)), returnType(returnType), body(std::move(body)) {}
+    FunctionDeclNode(ModifierType modifier, std::string name, std::vector<std::pair<Type, std::string>> params, Type returnType, ASTNodePtr body, AccessType access)
+        : ASTNode(ASTNodeType::FunctionDecl), modifier(std::move(modifier)), name(std::move(name)), params(std::move(params)), returnType(returnType), body(std::move(body)), access(access) {}
 };
 
 struct ReturnExprNode : ASTNode
@@ -116,9 +139,11 @@ struct VarDeclNode : ASTNode
     std::string name;
     Type varType;
     ASTNodePtr value;
+    ModifierType modifier;
 
-    VarDeclNode(bool isConst, std::string n, Type t, ASTNodePtr v)
-        : ASTNode(ASTNodeType::VarDecl), isConst(isConst), name(std::move(n)), varType(t), value(std::move(v)) {}
+    VarDeclNode(bool isConst, std::string n, Type t, ASTNodePtr v,ModifierType modifier)
+        : ASTNode(ASTNodeType::VarDecl), isConst(isConst), name(std::move(n)), varType(t), value(std::move(v)), modifier(std::move(modifier)) {
+    }
 };
 
 struct IfExprNode : ASTNode
@@ -139,5 +164,14 @@ struct AssignExprNode : ASTNode
     AssignExprNode(std::string name, ASTNodePtr value)
         : ASTNode(ASTNodeType::AssignExpr), name(std::move(name)), value(std::move(value)) {}
 };
+struct ClassDeclNode : ASTNode
+{
+    std::string name;
+    AccessType access;
+    ASTNodePtr body;
+    
+	ClassDeclNode(std::string name,AccessType access, ASTNodePtr body)
+        : ASTNode(ASTNodeType::ClassDecl), name(std::move(name)), access(std::move(access)), body(std::move(body)) { }
 
+};
 void printAST(const ASTNode *node, int indent = 0);
