@@ -12,7 +12,10 @@ struct Parser
         current = lexer.next();
         nextToken = lexer.next();
     }
-    void advance() { current = lexer.next(); }
+    void advance() {
+        current = nextToken;
+        nextToken = lexer.next();
+    }
     void expect(TokenType type);
     Token peekToken() const { return nextToken; }
     ASTNodePtr parserProgram();

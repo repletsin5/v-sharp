@@ -174,32 +174,39 @@ ASTNodePtr Parser::parseExpression(int minPrec)
 
 ASTNodePtr Parser::parseFunction()
 {
-    std::vector<std::string> modifiers;
-    while (true)
+    std::vector<std::string> modifiers(3);
+	uint8_t maxModifiers = 0;
+    while (true && maxModifiers < 3)
     {
+        
         switch (current.Type)
         {
-        case TokenType::KwPublic:
-            modifiers.push_back("public");
-            break;
-        case TokenType::KwPrivate:
-            modifiers.push_back("private");
-            break;
-        case TokenType::KwVirtual:
-            modifiers.push_back("virtual");
-            break;
-        case TokenType::KwOverride:
-            modifiers.push_back("override");
-            break;
-        case TokenType::KwStatic:
-            modifiers.push_back("static");
-            break;
-        default:
-            goto modifiers_done;
+            case TokenType::KwPublic:
+                modifiers.emplace_back("public");
+                advance();
+                break;
+            case TokenType::KwPrivate:
+                modifiers.emplace_back("private");
+                advance();
+                break;
+            case TokenType::KwVirtual:
+                modifiers.emplace_back("virtual");
+                advance();
+                break;
+            case TokenType::KwOverride:
+                modifiers.emplace_back("override");
+                advance();
+                break;
+            case TokenType::KwStatic:
+                modifiers.emplace_back("static");
+                advance();
+                break;
+            default: {
+                break; break; //replet - cursed i hate this.
+            }
         }
-        advance();
+        maxModifiers++;
     }
-modifiers_done:
 
     if (current.Type != TokenType::Identifier)
         throw std::runtime_error("Expected function name at line " + std::to_string(current.Line));
@@ -266,7 +273,6 @@ modifiers_done:
         }
         expect(TokenType::RightBrace);
         static_cast<BlockNode *>(body.get())->children = std::move(statements);
-        advance();
     }
 
     std::string access;
