@@ -13,7 +13,8 @@ struct Parser
         current = lexer.next();
         nextToken = lexer.next();
     }
-    void advance() {
+    void advance()
+    {
         current = nextToken;
         nextToken = lexer.next();
     }
@@ -24,6 +25,8 @@ struct Parser
     ASTNodePtr parsePrimary();
     ASTNodePtr parseFunction();
     Type parseType();
+    ASTNodePtr parseVarDecl();
+    ASTNodePtr parseIfExpr();
 
 private:
     int getPrecedence() const { return lexer.precedence(current.Type); }

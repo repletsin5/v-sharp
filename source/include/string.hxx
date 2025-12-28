@@ -9,35 +9,35 @@ inline constexpr std::string_view typeToString(Type t) noexcept
     {
     case Type::Void:
         return "void";
-    case Type::Bool:
-        return "bool";
+    case Type::Boolean:
+        return "boolean";
     case Type::Byte:
         return "byte";
     case Type::String:
         return "string";
 
-    case Type::I8:
-        return "i8";
-    case Type::I16:
-        return "i16";
-    case Type::I32:
-        return "i32";
-    case Type::I64:
-        return "i64";
+    case Type::Int8:
+        return "int8";
+    case Type::Int16:
+        return "int16";
+    case Type::Int32:
+        return "int32";
+    case Type::Int64:
+        return "int64";
 
-    case Type::U8:
-        return "u8";
-    case Type::U16:
-        return "u16";
-    case Type::U32:
-        return "u32";
-    case Type::U64:
-        return "u64";
+    case Type::Uint8:
+        return "uint8";
+    case Type::Uint16:
+        return "uint16";
+    case Type::Uint32:
+        return "uint32";
+    case Type::Uint64:
+        return "uint64";
 
-    case Type::F32:
-        return "f32";
-    case Type::F64:
-        return "f64";
+    case Type::Float32:
+        return "float32";
+    case Type::Float64:
+        return "float64";
     }
 
     return "unknown";

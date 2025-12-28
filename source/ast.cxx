@@ -92,6 +92,49 @@ void printAST(const ASTNode *node, int indent)
         printAST(ret->expr.get(), indent + 2);
         break;
     }
+    case ASTNodeType::VarDecl:
+    {
+        const VarDeclNode *var = static_cast<const VarDeclNode *>(node);
+        std::cout << pad << (var->isConst ? "ConstDecl" : "VarDecl")
+                  << " " << var->varType << " " << var->name;
+        if (var->value)
+        {
+            std::cout << " = ";
+            printAST(var->value.get(), 0);
+        }
+        else
+        {
+            std::cout << std::endl;
+        }
+        break;
+    }
+    case ASTNodeType::IfExpr:
+    {
+        const IfExprNode *ifn = static_cast<const IfExprNode *>(node);
+
+        std::cout << pad << "IfExpr" << std::endl;
+
+        std::cout << pad << "  Condition:" << std::endl;
+        printAST(ifn->condition.get(), indent + 4);
+
+        std::cout << pad << "  Then:" << std::endl;
+        printAST(ifn->thenBranch.get(), indent + 4);
+
+        if (ifn->elseBranch)
+        {
+            std::cout << pad << "  Else:" << std::endl;
+            printAST(ifn->elseBranch.get(), indent + 4);
+        }
+
+        break;
+    }
+    case ASTNodeType::AssignExpr:
+    {
+        const AssignExprNode *as = static_cast<const AssignExprNode *>(node);
+        std::cout << pad << "AssignExpr(" << as->name << ")" << std::endl;
+        printAST(as->value.get(), indent + 2);
+        break;
+    }
     default:
         std::cout << pad << "Unknown AST Node" << std::endl;
     }

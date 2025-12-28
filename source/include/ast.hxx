@@ -9,19 +9,19 @@
 enum class Type
 {
     Void,
-    Bool,
+    Boolean,
     Byte,
     String,
-    I8,
-    I16,
-    I32,
-    I64,
-    U8,
-    U16,
-    U32,
-    U64,
-    F32,
-    F64
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    Uint8,
+    Uint16,
+    Uint32,
+    Uint64,
+    Float32,
+    Float64
 };
 
 enum class ASTNodeType
@@ -40,7 +40,8 @@ enum class ASTNodeType
     UnaryExpr,
     Literal,
     Identifier,
-    FunctionCall
+    FunctionCall,
+    AssignExpr,
 };
 
 struct ASTNode
@@ -107,6 +108,36 @@ struct ReturnExprNode : ASTNode
 {
     ASTNodePtr expr;
     ReturnExprNode(ASTNodePtr e) : ASTNode(ASTNodeType::ReturnExpr), expr(std::move(e)) {}
+};
+
+struct VarDeclNode : ASTNode
+{
+    bool isConst;
+    std::string name;
+    Type varType;
+    ASTNodePtr value;
+
+    VarDeclNode(bool isConst, std::string n, Type t, ASTNodePtr v)
+        : ASTNode(ASTNodeType::VarDecl), isConst(isConst), name(std::move(n)), varType(t), value(std::move(v)) {}
+};
+
+struct IfExprNode : ASTNode
+{
+    ASTNodePtr condition;
+    ASTNodePtr thenBranch;
+    ASTNodePtr elseBranch;
+
+    IfExprNode(ASTNodePtr cond, ASTNodePtr thenB, ASTNodePtr elseB = nullptr)
+        : ASTNode(ASTNodeType::IfExpr), condition(std::move(cond)), thenBranch(std::move(thenB)), elseBranch(std::move(elseB)) {}
+};
+
+struct AssignExprNode : ASTNode
+{
+    std::string name;
+    ASTNodePtr value;
+
+    AssignExprNode(std::string name, ASTNodePtr value)
+        : ASTNode(ASTNodeType::AssignExpr), name(std::move(name)), value(std::move(value)) {}
 };
 
 void printAST(const ASTNode *node, int indent = 0);

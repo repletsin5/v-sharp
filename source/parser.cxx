@@ -52,32 +52,33 @@ ASTNodePtr Parser::parsePrimary()
 {
     switch (current.Type)
     {
+    case TokenType::KwIf:
+        return parseIfExpr();
+    case TokenType::KwVar:
+    case TokenType::KwConst:
+        return parseVarDecl();
     case TokenType::KwReturn:
     {
         advance();
-        ASTNodePtr expr = parseExpression();
-        return std::make_unique<ReturnExprNode>(std::move(expr));
+        return std::make_unique<ReturnExprNode>(parseExpression());
     }
     case TokenType::Integer:
     {
         int64_t value = std::stoi(std::string(current.Lexeme));
-        ASTNodePtr node = std::make_unique<LiteralNode>(Type::I64, value);
         advance();
-        return node;
+        return std::make_unique<LiteralNode>(Type::Int64, value);
     }
     case TokenType::Float:
     {
         double value = std::stod(std::string(current.Lexeme));
-        ASTNodePtr node = std::make_unique<LiteralNode>(Type::F64, value);
         advance();
-        return node;
+        return std::make_unique<LiteralNode>(Type::Float64, value);
     }
     case TokenType::Unsigned:
     {
         uint64_t value = std::stoul(std::string(current.Lexeme));
-        ASTNodePtr node = std::make_unique<LiteralNode>(Type::U64, value);
         advance();
-        return node;
+        return std::make_unique<LiteralNode>(Type::Uint64, value);
     }
     case TokenType::Byte:
     {
@@ -89,7 +90,6 @@ ASTNodePtr Parser::parsePrimary()
         {
             if (lex.size() < 4)
                 throw std::runtime_error("Invalid escape sequence in byte literal");
-
             switch (lex[2])
             {
             case 'n':
@@ -115,29 +115,26 @@ ASTNodePtr Parser::parsePrimary()
                 break;
             }
         }
-        ASTNodePtr node = std::make_unique<LiteralNode>(Type::Byte, value);
         advance();
-        return node;
+        return std::make_unique<LiteralNode>(Type::Byte, value);
     }
     case TokenType::String:
     {
         std::string value = std::string(current.Lexeme);
-        ASTNodePtr node = std::make_unique<LiteralNode>(Type::String, value);
         advance();
-        return node;
+        return std::make_unique<LiteralNode>(Type::String, value);
     }
     case TokenType::Boolean:
     {
         bool value = (current.Lexeme == "true");
-        ASTNodePtr node = std::make_unique<LiteralNode>(Type::Bool, value);
         advance();
-        return node;
+        return std::make_unique<LiteralNode>(Type::Boolean, value);
     }
     case TokenType::Identifier:
     {
-        ASTNodePtr node = std::make_unique<IdentifierNode>(std::string(current.Lexeme));
+        std::string name(current.Lexeme);
         advance();
-        return node;
+        return std::make_unique<IdentifierNode>(name);
     }
     case TokenType::LeftParen:
     {
@@ -147,12 +144,28 @@ ASTNodePtr Parser::parsePrimary()
         return expr;
     }
     default:
-        throw std::runtime_error("Unexpected token in primary expression at line " + std::to_string(current.Line));
+        throw std::runtime_error("Unexpected token in expression at line " + std::to_string(current.Line));
     }
 }
 
 ASTNodePtr Parser::parseExpression(int minPrec)
 {
+    if (current.Type == TokenType::Identifier)
+    {
+        Token ident = current;
+        Token next = peekToken();
+
+        if (next.Type == TokenType::Assign)
+        {
+            advance();
+            advance();
+            ASTNodePtr value = parseExpression();
+            return std::make_unique<AssignExprNode>(
+                std::string(ident.Lexeme),
+                std::move(value));
+        }
+    }
+
     ASTNodePtr left = parsePrimary();
 
     while (true)
@@ -266,15 +279,13 @@ ASTNodePtr Parser::parseFunction()
     if (current.Type == TokenType::LeftBrace)
     {
         advance();
-        ASTNodeList statements;
+        ASTNodeList expressions;
         while (current.Type != TokenType::RightBrace && current.Type != TokenType::EndOfFile)
         {
-            statements.push_back(parseExpression());
-            if (current.Type == TokenType::Semicolon)
-                advance();
+            expressions.push_back(parseExpression());
         }
         expect(TokenType::RightBrace);
-        static_cast<BlockNode *>(body.get())->children = std::move(statements);
+        static_cast<BlockNode *>(body.get())->children = std::move(expressions);
     }
 
     std::string access;
@@ -294,37 +305,37 @@ Type Parser::parseType()
     {
     case TokenType::KwInt8:
         advance();
-        return Type::I8;
+        return Type::Int8;
     case TokenType::KwInt16:
         advance();
-        return Type::I16;
+        return Type::Int16;
     case TokenType::KwInt32:
         advance();
-        return Type::I32;
+        return Type::Int32;
     case TokenType::KwInt64:
         advance();
-        return Type::I64;
+        return Type::Int64;
     case TokenType::KwUInt8:
         advance();
-        return Type::U8;
+        return Type::Uint8;
     case TokenType::KwUInt16:
         advance();
-        return Type::U16;
+        return Type::Uint16;
     case TokenType::KwUInt32:
         advance();
-        return Type::U32;
+        return Type::Uint32;
     case TokenType::KwUInt64:
         advance();
-        return Type::U64;
+        return Type::Uint64;
     case TokenType::KwFloat32:
         advance();
-        return Type::F32;
+        return Type::Float32;
     case TokenType::KwFloat64:
         advance();
-        return Type::F64;
+        return Type::Float64;
     case TokenType::KwBoolean:
         advance();
-        return Type::Bool;
+        return Type::Boolean;
     case TokenType::KwByte:
         advance();
         return Type::Byte;
@@ -337,4 +348,74 @@ Type Parser::parseType()
     default:
         throw std::runtime_error("Expected type at line " + std::to_string(current.Line));
     }
+}
+
+ASTNodePtr Parser::parseVarDecl()
+{
+    bool isConst = false;
+    if (current.Type == TokenType::KwConst)
+        isConst = true;
+    advance();
+
+    if (current.Type != TokenType::Identifier)
+        throw std::runtime_error("Expected variable name at line " + std::to_string(current.Line));
+    std::string name(current.Lexeme);
+    advance();
+
+    expect(TokenType::Colon);
+
+    Type varType = parseType();
+
+    ASTNodePtr value = nullptr;
+    if (current.Type == TokenType::Assign)
+    {
+        advance();
+        value = parseExpression();
+    }
+
+    return std::make_unique<VarDeclNode>(isConst, name, varType, std::move(value));
+}
+
+ASTNodePtr Parser::parseIfExpr()
+{
+    expect(TokenType::KwIf);
+
+    ASTNodePtr condition = parseExpression();
+    expect(TokenType::LeftBrace);
+
+    ASTNodeList thenExpressions;
+    while (current.Type != TokenType::RightBrace && current.Type != TokenType::EndOfFile)
+    {
+        thenExpressions.push_back(parseExpression());
+    }
+    expect(TokenType::RightBrace);
+    ASTNodePtr thenBlock = std::make_unique<BlockNode>();
+    static_cast<BlockNode *>(thenBlock.get())->children = std::move(thenExpressions);
+
+    ASTNodePtr elseBranch = nullptr;
+    if (current.Type == TokenType::KwElse)
+    {
+        advance();
+        if (current.Type == TokenType::KwIf)
+        {
+            elseBranch = parseIfExpr();
+        }
+        else if (current.Type == TokenType::LeftBrace)
+        {
+            advance();
+            ASTNodeList elseExpressions;
+            while (current.Type != TokenType::RightBrace && current.Type != TokenType::EndOfFile)
+            {
+                elseExpressions.push_back(parseExpression());
+            }
+            expect(TokenType::RightBrace);
+            elseBranch = std::make_unique<BlockNode>();
+            static_cast<BlockNode *>(elseBranch.get())->children = std::move(elseExpressions);
+        }
+        else
+        {
+            throw std::runtime_error("Expected '{' or 'if' after 'else' at line " + std::to_string(current.Line));
+        }
+    }
+    return std::make_unique<IfExprNode>(std::move(condition), std::move(thenBlock), std::move(elseBranch));
 }
