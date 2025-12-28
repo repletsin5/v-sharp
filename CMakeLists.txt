@@ -7,7 +7,7 @@ project(
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/include/config.in.hxx
-    ${CMAKE_CURRENT_BINARY_DIR}/config.hxx
+    ${CMAKE_CURRENT_BINARY_DIR}/source/include/config.hxx
     @ONLY
 )
 
@@ -36,6 +36,7 @@ set(VSHARP_SOURCES
     source/ast.cxx
     source/lsp.cxx
     source/server.cxx
+    source/cli.cxx
 )
 
 add_executable(vsharp ${VSHARP_SOURCES})
@@ -43,6 +44,7 @@ add_executable(vsharp ${VSHARP_SOURCES})
 target_include_directories(vsharp
     PRIVATE
         ${PROJECT_SOURCE_DIR}/source/include
+        ${CMAKE_CURRENT_BINARY_DIR}/source/include
 )
 
 target_compile_options(vsharp PRIVATE

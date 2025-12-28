@@ -1,42 +1,54 @@
+#include <map>
 #include <iostream>
-#include <fstream>
-#include <parser.hxx>
+#include <functional>
+#include <cli.hxx>
 #include <server.hxx>
 
 int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <file>\n";
+        printHelp();
         return 1;
     }
 
-    std::string command = argv[1];
-    if (command == "lsp")
+    std::map<std::string, std::function<void(const std::vector<std::string> &)>> commands;
+
+    commands["help"] = [](const auto &)
+    {
+        printHelp();
+    };
+    commands["version"] = [](const auto &)
+    {
+        printVersion();
+    };
+    commands["lsp"] = [](const auto &)
     {
         runLSP();
-        return 0;
-    }
-
-    std::ifstream file(command, std::ios::binary);
-    if (!file)
+    };
+    commands["compile"] = [](const auto &args)
     {
-        std::cerr << "Cannot open file\n";
-        return 1;
-    }
+        if (args.empty())
+        {
+            std::cerr << "Error: No file provided." << std::endl;
+            exit(1);
+        }
+        std::string file = args[0];
+        std::vector<std::string> flags(args.begin() + 1, args.end());
+        compileFile(file, flags);
+    };
 
-    std::string source((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    Lexer lexer(std::move(source), argv[1]);
+    std::string command = argv[1];
+    std::vector<std::string> args(argv + 2, argv + argc);
 
-    Parser parser(lexer);
-    try
+    if (commands.find(command) != commands.end())
     {
-        ASTNodePtr ast = parser.parserProgram();
-        printAST(ast.get());
+        commands[command](args);
     }
-    catch (const std::exception &e)
+    else
     {
-        std::cerr << "Parser error: " << e.what() << "\n";
+        std::cerr << "Unknown command: " << command << "\n";
+        printHelp();
         return 1;
     }
 
