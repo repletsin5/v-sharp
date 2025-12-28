@@ -74,7 +74,7 @@ ASTNodePtr Parser::parsePrimary()
     }
     case TokenType::Unsigned:
     {
-        u_int64_t value = std::stoul(std::string(current.Lexeme));
+        uint64_t value = std::stoul(std::string(current.Lexeme));
         ASTNodePtr node = std::make_unique<LiteralNode>(Type::U64, value);
         advance();
         return node;
@@ -175,35 +175,37 @@ ASTNodePtr Parser::parseExpression(int minPrec)
 ASTNodePtr Parser::parseFunction()
 {
     std::vector<std::string> modifiers(3);
-	u_int8_t maxModifiers = 0;
+    uint8_t maxModifiers = 0;
     while (true && maxModifiers < 3)
     {
-        
+
         switch (current.Type)
         {
-            case TokenType::KwPublic:
-                modifiers.emplace_back("public");
-                advance();
-                break;
-            case TokenType::KwPrivate:
-                modifiers.emplace_back("private");
-                advance();
-                break;
-            case TokenType::KwVirtual:
-                modifiers.emplace_back("virtual");
-                advance();
-                break;
-            case TokenType::KwOverride:
-                modifiers.emplace_back("override");
-                advance();
-                break;
-            case TokenType::KwStatic:
-                modifiers.emplace_back("static");
-                advance();
-                break;
-            default: {
-                break; break; //replet - cursed i hate this.
-            }
+        case TokenType::KwPublic:
+            modifiers.emplace_back("public");
+            advance();
+            break;
+        case TokenType::KwPrivate:
+            modifiers.emplace_back("private");
+            advance();
+            break;
+        case TokenType::KwVirtual:
+            modifiers.emplace_back("virtual");
+            advance();
+            break;
+        case TokenType::KwOverride:
+            modifiers.emplace_back("override");
+            advance();
+            break;
+        case TokenType::KwStatic:
+            modifiers.emplace_back("static");
+            advance();
+            break;
+        default:
+        {
+            break;
+            break;
+        }
         }
         maxModifiers++;
     }

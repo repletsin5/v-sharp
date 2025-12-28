@@ -57,19 +57,19 @@ void printAST(const ASTNode *node, int indent)
             }
             std::cout << '\'';
         }
-        std::cout << ")\n";
+        std::cout << ")" << std::endl;
         break;
     }
     case ASTNodeType::Identifier:
     {
         const IdentifierNode *id = static_cast<const IdentifierNode *>(node);
-        std::cout << pad << "Identifier(" << id->name << ")\n";
+        std::cout << pad << "Identifier(" << id->name << ")" << std::endl;
         break;
     }
     case ASTNodeType::BinaryExpr:
     {
         const BinaryExprNode *bin = static_cast<const BinaryExprNode *>(node);
-        std::cout << pad << "BinaryExpr(" << bin->op << ")\n";
+        std::cout << pad << "BinaryExpr(" << bin->op << ")" << std::endl;
         printAST(bin->left.get(), indent + 2);
         printAST(bin->right.get(), indent + 2);
         break;
@@ -77,22 +77,22 @@ void printAST(const ASTNode *node, int indent)
     case ASTNodeType::FunctionDecl:
     {
         const FunctionDeclNode *fn = static_cast<const FunctionDeclNode *>(node);
-        std::cout << pad << "FunctionDecl(" << fn->access << " " << fn->name << ") -> " << fn->returnType << "\n";
-        std::cout << pad << "  Params:\n";
+        std::cout << pad << "FunctionDecl(" << fn->access << " " << fn->name << ") -> " << fn->returnType << std::endl;
+        std::cout << pad << "  Params:" << std::endl;
         for (auto &p : fn->params)
-            std::cout << pad << "    " << p.first << " " << p.second << "\n";
-        std::cout << pad << "  Body:\n";
+            std::cout << pad << "    " << p.first << " " << p.second << std::endl;
+        std::cout << pad << "  Body:" << std::endl;
         printAST(fn->body.get(), indent + 4);
         break;
     }
     case ASTNodeType::ReturnExpr:
     {
         const ReturnExprNode *ret = static_cast<const ReturnExprNode *>(node);
-        std::cout << pad << "ReturnExpr\n";
+        std::cout << pad << "ReturnExpr" << std::endl;
         printAST(ret->expr.get(), indent + 2);
         break;
     }
     default:
-        std::cout << pad << "Unknown AST Node\n";
+        std::cout << pad << "Unknown AST Node" << std::endl;
     }
 }

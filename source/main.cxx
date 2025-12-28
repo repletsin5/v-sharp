@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        std::cerr << "Unknown command: " << command << "\n";
+        std::cerr << "Unknown command: " << command << std::endl;
         printHelp();
         return 1;
     }
